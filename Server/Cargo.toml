@@ -1,0 +1,10 @@
+[package]
+name = "Server"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+[[bin]]
+name = "Server-Project"
+path = "src/Server.rs"
