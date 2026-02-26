@@ -1,24 +1,292 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:           #07070d;
+      --surface:      #0f0f18;
+      --border:       #1e1e2e;
+      --border-hover: rgba(120, 80, 255, 0.5);
+      --accent:       #7c4dff;
+      --accent-soft:  rgba(124, 77, 255, 0.18);
+      --accent-glow:  rgba(124, 77, 255, 0.35);
+      --cyan:         #00e5ff;
+      --cyan-soft:    rgba(0, 229, 255, 0.09);
+      --cyan-border:  rgba(0, 229, 255, 0.22);
+      --green:        #00e5a0;
+      --text:         #ececf4;
+      --text-muted:   #3a3a52;
+      --radius-card:  20px;
+      --radius-sm:    10px;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      padding: 2.5rem;
+      background-image:
+        radial-gradient(ellipse 70% 45% at 50% -10%, rgba(124, 77, 255, 0.13), transparent),
+        radial-gradient(ellipse 35% 25% at 90% 90%,  rgba(0, 229, 255, 0.07), transparent);
+    }
+
+    /* ─── FORM ── */
+    form {
+      display: flex;
+      gap: 0.625rem;
+      margin-bottom: 2.75rem;
+      max-width: 480px;
+    }
+
+    form input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 1rem;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    form input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    form button {
+      flex-shrink: 0;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 1.35rem;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      box-shadow: 0 0 20px var(--accent-glow);
+      transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+    }
+
+    form button:hover  { background: #9065ff; box-shadow: 0 0 32px rgba(124, 77, 255, 0.55); }
+    form button:active { transform: scale(0.96); }
+
+    /* ─── GRID ── */
+    .gird {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1.1rem;
+    }
+
+    /* ─── CARD ── */
+    .item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 1.5rem 1.6rem 1.6rem;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+      container-type: inline-size;
+    }
+
+    /* animation seulement à l'apparition initiale */
+    .item.is-new {
+      animation: fadeUp 0.45s ease both;
+    }
+
+    /* ligne décorative haut */
+    .item::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 1.5rem; right: 1.5rem;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(124,77,255,0.5), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    /* coin décoratif */
+    .item::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 80px; height: 80px;
+      background: conic-gradient(from 180deg at 100% 0%, var(--accent) 0deg, transparent 80deg);
+      opacity: 0.06;
+      border-radius: 0 var(--radius-card) 0 0;
+      transition: opacity 0.3s;
+    }
+
+    .item:hover {
+      transform: translateY(-5px);
+      border-color: var(--border-hover);
+      box-shadow:
+        0 20px 60px rgba(0,0,0,0.5),
+        0 0 0 1px rgba(124, 77, 255, 0.15),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .item:hover::before { opacity: 1; }
+    .item:hover::after  { opacity: 0.14; }
+
+    /* ─── UUID ── */
+    .uuid {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ─── HEADER ROW (os + status) ── */
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .os {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      background: var(--cyan-soft);
+      border: 1px solid var(--cyan-border);
+      border-radius: 6px;
+      padding: 0.22rem 0.65rem;
+    }
+
+    .os::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 7px var(--green);
+      animation: pulse 2.2s ease-in-out infinite;
+    }
+
+    /* ─── NAME ── */
+    .name {
+      font-size: clamp(1rem, 5cqi + 0.4rem, 1.55rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      background: linear-gradient(135deg, #fff 20%, #b0a0ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ─── KEYFRAMES ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1;   transform: scale(1); }
+      50%       { opacity: 0.3; transform: scale(0.8); }
+    }
+  </style>
 </head>
+
 <body>
-    <form action="/msg">
-        <input type="text" name="message" value="whoareyou">
-        <button type="submit">envoyer</button>
-    </form>
+
+  <form action="/msg">
+    <input type="text" name="message" value="whoareyou">
+    <button type="submit">envoyer</button>
+  </form>
+
+  <div class="gird" id="grid"></div>
+
 </body>
 
-
 <script>
+  const grid = document.getElementById("grid");
 
+  // UUIDs déjà affichés → pas de ré-animation
+  const knownUUIDs = new Set();
 
-    
+  function getDevices() {
+    fetch("/getDevices")
+      .then(r => r.json())
+      .then(data => {
 
+        // UUIDs reçus ce cycle
+        const receivedUUIDs = new Set(data.map(d => d.uuid));
 
+        // Supprimer les cartes disparues
+        grid.querySelectorAll(".item").forEach(card => {
+          if (!receivedUUIDs.has(card.dataset.uuid)) {
+            card.style.transition = "opacity 0.3s, transform 0.3s";
+            card.style.opacity = "0";
+            card.style.transform = "scale(0.95)";
+            setTimeout(() => card.remove(), 300);
+            knownUUIDs.delete(card.dataset.uuid);
+          }
+        });
+
+        // Ajouter / mettre à jour les cartes
+        data.forEach(d => {
+          const existing = grid.querySelector(`.item[data-uuid="${d.uuid}"]`);
+
+          if (existing) {
+            // Mise à jour silencieuse sans ré-animation
+            existing.querySelector(".uuid").textContent = d.uuid;
+            existing.querySelector(".os").textContent   = d.os;
+            existing.querySelector(".name").textContent = d.name;
+          } else {
+            // Nouvelle carte → animation
+            const div = document.createElement("div");
+            div.className   = "item is-new";
+            div.dataset.uuid = d.uuid;
+            div.innerHTML = `
+              <div class="uuid">${d.uuid}</div>
+              <div class="card-header">
+                <div class="os">${d.os}</div>
+              </div>
+              <div class="name">${d.name}</div>
+            `;
+            grid.appendChild(div);
+            knownUUIDs.add(d.uuid);
+
+            // Retire la classe après l'animation pour ne pas rejouer
+            div.addEventListener("animationend", () => div.classList.remove("is-new"), { once: true });
+          }
+        });
+      })
+      .catch(err => console.error("Erreur fetch:", err));
+  }
+
+  getDevices();
+  setInterval(getDevices, 5000);
 </script>
 
 </html>
