@@ -5,10 +5,18 @@ use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use std::thread;
 use std::fs;
 use uuid::Uuid;
+use serde::Serialize;
+use std::io::{BufReader, BufRead};
 
 struct Client{
     uuid: Option<Uuid>,
     stream: Arc<Mutex<TcpStream>>,
+}
+
+
+#[derive(Serialize)]
+struct ClientInfo {
+    uuid: Option<Uuid>,
 }
 
 fn handle_client(mut stream: TcpStream, clients: Arc<Mutex<Vec<Client>>>) {
@@ -70,8 +78,33 @@ async fn msg(query: web::Query<std::collections::HashMap<String, String>>, clien
 }
 
 #[get("/getDevices")]
-async fn getDevices() -> impl Responder {
-    return "getDevices"
+async fn getDevices(clients: web::Data<Arc<Mutex<Vec<Client>>>> ) -> impl Responder {
+    println!("Get Devices");
+
+    let clientList = getClientForWeb(&clients);
+   
+   HttpResponse::Ok()
+        .content_type("application/json")
+        .body(serde_json::to_string(&clientList).unwrap())
+   
+}
+
+
+
+
+fn clientToInfo(Client: &Client) -> ClientInfo {
+    ClientInfo {
+        uuid: Client.uuid,
+    }
+}
+
+fn getClientForWeb(clients: &Arc<Mutex<Vec<Client>>>) -> Vec<ClientInfo> {
+    let ClientLock = clients.lock().unwrap();
+
+    ClientLock.iter()
+        .map(|c| clientToInfo(c))
+        .collect()
+
 }
 
 
@@ -89,10 +122,20 @@ fn start_tcp_server(clients: Arc<Mutex<Vec<Client>>>) {
 
         for stream in listener.incoming() {
             match stream {
-                Ok(stream) => {
+                Ok(mut stream) => {
                     println!("New Connexion");
+                    stream.try_clone().unwrap().write_all(b"whoareyou");
+
+                    
+                    let mut reader = BufReader::new(&stream);
+                    let mut uuidStr = String::new();
+                    reader.read_line(&mut uuidStr).unwrap();
+                    let clientUuid = Uuid::parse_str(uuidStr.trim()).ok();
+
+                    println!("Client uuid : {}", uuidStr);
+
                     clients.lock().unwrap().push(Client {
-                        uuid: None,
+                        uuid: clientUuid ,
                         stream: Arc::new(Mutex::new(stream.try_clone().unwrap())),
                     });
                     let clients_clone  = clients.clone();
@@ -123,6 +166,7 @@ async fn main() -> std::io::Result<()> {
                 .app_data(web::Data::new(clients.clone()))
                 .service(homePage)
                 .service(msg)
+                .service(getDevices)
     })
     .bind(("0.0.0.0", 8000))?
     .run()

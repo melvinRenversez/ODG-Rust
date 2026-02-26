@@ -1,3 +1,4 @@
+use std::fmt::format;
 use std::net::TcpStream;
 use std::io::{Read, Write};
 use std::thread::sleep;
@@ -5,6 +6,8 @@ use std::time::Duration;
 use uuid::Uuid;
 
 fn main() -> std::io::Result<()> {
+
+    let dur = 5;
     
     let my_uuid = Uuid::new_v4();
     println!("UUID genere : {}", my_uuid);
@@ -14,8 +17,8 @@ fn main() -> std::io::Result<()> {
             Ok(s) => s, 
             Err(e) => {
                 println!("Impossible de se connecter : {}.", e);
-                println!("Client Retry in 10s");
-                sleep(Duration::from_secs(10));
+                println!("Client Retry in {}s", dur);
+                sleep(Duration::from_secs(dur));
                 continue;
             }
         };
@@ -32,7 +35,8 @@ fn main() -> std::io::Result<()> {
                         if message.trim() == "whoareyou" {
                             
                             println!("Whoiam");
-                            stream.write(my_uuid.to_string().as_bytes());
+                            let uuidBytes = format!("{}\n", my_uuid).into_bytes();
+                            let _ = stream.write_all(&uuidBytes);
     
     
                         }else  {
@@ -51,8 +55,8 @@ fn main() -> std::io::Result<()> {
         }
         
         
-        println!("Client Retry in 10s");
-        sleep(Duration::from_secs(10));
+        println!("Client Retry in {}s", dur);
+        sleep(Duration::from_secs(dur));
     }
 
 
